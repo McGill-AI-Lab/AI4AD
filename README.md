@@ -1,6 +1,6 @@
 # AI4AD: Predicting Mild Cognitive Impairment from Plasma Proteomics
 
-**McGill AI Club** · February 2026
+**McGill AI Lab** · February 2026
 
 A machine learning pipeline to classify **Cognitively Normal (CN)** vs **Mild Cognitive Impairment (MCI)** participants using plasma protein levels from the ADNI NULISA CNS panel. The goal is to evaluate whether blood-based biomarkers can improve early MCI screening beyond standard clinical assessments.
 
