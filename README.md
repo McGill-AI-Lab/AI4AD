@@ -48,7 +48,7 @@ alzheimer-s-detection/
 
 ```bash
 git clone <repo-url>
-cd alzheimer-s-detection
+cd alzheimers-detection
 pip install -r requirements.txt
 ```
 
