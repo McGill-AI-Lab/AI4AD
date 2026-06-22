@@ -52,8 +52,11 @@ OUT_DIR = Path("data/processed")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 FILES = {
-    "prot": "BSHRI_PLA_CSF_NULISA_CNS_16Feb2026.csv",
-    "dx": "DXSUM_16Feb2026.csv"
+    "prot": "BSHRI_PLA_CSF_NULISA_CNS_20Jun2026.csv",
+    "dx": "DXSUM_20Jun2026.csv",
+    "demog": "PTDEMOG_20Jun2026.csv",
+    "apoe": "APOERES_20Jun2026.csv",
+    "mmse": "MMSE_20Jun2026.csv",
 }
 
 # Hyperparameter: We drop proteins that are mostly undetected to reduce noise
@@ -166,23 +169,93 @@ def build_baseline_cohort():
     return cohort
 
 
+def load_demographics():
+    """
+    Loads PTDEMOG and returns one row per patient with sex and education.
+    PTGENDER: 1 = Male, 2 = Female (kept as-is; downstream scripts recode to 0/1).
+    PTEDUCAT: years of education.
+    """
+    print("\n--- (3) DEMOGRAPHICS ---")
+    demog = pd.read_csv(DATA_DIR / FILES["demog"], low_memory=False)
+    demog['RID'] = pd.to_numeric(demog['RID'], errors='coerce').astype('Int64')
+    demog = demog.dropna(subset=['RID'])
+
+    # Keep only the columns we need; take first record per patient
+    demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT"]].first()
+    print(f"  Demographics for {len(demog):,} patients")
+    return demog
+
+
+def load_apoe():
+    """
+    Loads APOERES and computes the APOE ε4 allele count (0, 1, or 2).
+    The GENOTYPE column is formatted as e.g. '3/4', '4/4'.
+    We count how many '4' alleles appear.
+    """
+    print("\n--- (4) APOE ---")
+    apoe = pd.read_csv(DATA_DIR / FILES["apoe"], low_memory=False)
+    apoe['RID'] = pd.to_numeric(apoe['RID'], errors='coerce').astype('Int64')
+    apoe = apoe.dropna(subset=['RID', 'GENOTYPE'])
+
+    apoe["apoe4_count"] = apoe["GENOTYPE"].astype(str).str.count("4")
+
+    # One row per patient 
+    apoe = apoe.groupby("RID", as_index=False)["apoe4_count"].max()
+    print(f"  APOE ε4 counts for {len(apoe):,} patients")
+    return apoe
+
+
+def load_mmse():
+    """
+    Loads MMSE scores filtered to the baseline visit.
+    MMSCORE: Mini-Mental State Exam score (0–30, higher = better).
+    """
+    print("\n--- (5) MMSE ---")
+    mmse = pd.read_csv(DATA_DIR / FILES["mmse"], low_memory=False)
+    mmse['RID'] = pd.to_numeric(mmse['RID'], errors='coerce').astype('Int64')
+    mmse = mmse.dropna(subset=['RID'])
+
+    # Filter to baseline visits only
+    mmse = mmse[mmse["VISCODE"].astype(str).str.strip().str.lower().isin(BASELINE_VISCODES)].copy()
+
+    # One row per patient
+    mmse = mmse.groupby("RID", as_index=False)[["MMSCORE"]].first()
+    print(f"  Baseline MMSE for {len(mmse):,} patients")
+    return mmse
+
+
 def main():
     # 1. Create Feature Matrix (X)
     prot_wide = process_proteomics()
-    
+
     # 2. Create Target Labels (y)
     cohort = build_baseline_cohort()
 
-    print("\n--- (3) MERGE: Joining Proteomics with Labels ---")
-    # 3. Inner Join: Keep only patients who have BOTH a diagnosis AND proteomics data
+    # 3-5. Load covariates
+    demog = load_demographics()
+    apoe = load_apoe()
+    mmse = load_mmse()
+
+    print("\n--- (6) MERGE: Joining Everything by RID ---")
+    # Inner join proteins + diagnosis (must have both)
     final_df = pd.merge(cohort, prot_wide, on="RID", how="inner")
-    
-    # 4. Save to disk
+    # Left join covariates (keep patient even if a covariate file is missing a row)
+    final_df = final_df.merge(demog, on="RID", how="left")
+    final_df = final_df.merge(apoe, on="RID", how="left")
+    final_df = final_df.merge(mmse, on="RID", how="left")
+
+    # Save to disk
     out_path = OUT_DIR / "adni_nulisa_cohort.csv"
     final_df.to_csv(out_path, index=False)
-    
-    print(f"\n✅ SUCCESS: Saved final cohort to {out_path}")
+
+
+   # To see how many patients were dropped from merge
+    print(f"\nSaved final cohort to {out_path}")
     print(f"  Final Shape: {final_df.shape} (Patients: {len(final_df)})")
+    print(f"  Covariate coverage:")
+    for col in ["PTGENDER", "PTEDUCAT", "apoe4_count", "MMSCORE"]:
+        n = final_df[col].notna().sum()
+        print(f"    {col}: {n}/{len(final_df)} ({100*n/len(final_df):.0f}%)")
     print("\nGroup Balance:")
     print(final_df['cohort_group'].value_counts().to_string())
 
