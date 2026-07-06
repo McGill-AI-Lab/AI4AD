@@ -44,6 +44,7 @@ Assumptions / rules applied
 
 import pandas as pd
 from pathlib import Path
+import glob
 
 # --- CONFIGURATION ---
 # Set up relative paths so this script works on anyone's machine who clones the repo
@@ -52,11 +53,11 @@ OUT_DIR = Path("data/processed")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 FILES = {
-    "prot": "BSHRI_PLA_CSF_NULISA_CNS_20Jun2026.csv",
-    "dx": "DXSUM_20Jun2026.csv",
-    "demog": "PTDEMOG_20Jun2026.csv",
-    "apoe": "APOERES_20Jun2026.csv",
-    "mmse": "MMSE_20Jun2026.csv",
+    "prot": "BSHRI_PLA_CSF_NULISA_CNS",
+    "dx": "DXSUM",
+    "demog": "PTDEMOG",
+    "apoe": "APOERES",
+    "mmse": "MMSE",
 }
 
 # Hyperparameter: We drop proteins that are mostly undetected to reduce noise
@@ -65,6 +66,17 @@ DETECT_THRESHOLD = 0.50
 # 'bl' is ADNI's standard baseline visit. 'sc' (screening) is sometimes used in ADNI2/GO
 BASELINE_VISCODES = {"bl", "sc"}
 
+def get_file(filename):
+    '''
+    Returns first csv matching prefix of filename.
+    '''
+    matches = list(DATA_DIR.glob(f'{filename}*.csv'))
+    
+    if len(matches) > 1:
+        print(f'Warning: Multiple files found for {filename}. Using {matches[0].name}')
+
+    return matches[0]
+
 
 def process_proteomics():
     """
@@ -72,7 +84,7 @@ def process_proteomics():
     undetected proteins, and pivots the data into a machine-learning-ready feature matrix.
     """
     print("\n--- (1) PROTEOMICS: Filtering & Pivoting ---")
-    prot = pd.read_csv(DATA_DIR / FILES["prot"], low_memory=False)
+    prot = pd.read_csv(get_file(FILES["prot"]), low_memory=False)
     
     # 1. BIOLOGICAL FILTER: We only want blood plasma. 
     # The 'SampleType' column contains QC flags; 'SampleMatrixType' contains the actual fluid type.
@@ -130,7 +142,7 @@ def build_baseline_cohort():
     to serve as the target variable (y) for our ML models.
     """
     print("\n--- (2) DIAGNOSIS: Extracting Baseline Labels ---")
-    dx = pd.read_csv(DATA_DIR / FILES["dx"], low_memory=False)
+    dx = pd.read_csv(get_file(FILES["dx"]), low_memory=False)
 
     # 1. TEMPORAL FILTER: Get baseline diagnoses only
     dx_bl = dx[dx["VISCODE"].astype(str).str.lower().isin(BASELINE_VISCODES)].copy()
@@ -176,7 +188,7 @@ def load_demographics():
     PTEDUCAT: years of education.
     """
     print("\n--- (3) DEMOGRAPHICS ---")
-    demog = pd.read_csv(DATA_DIR / FILES["demog"], low_memory=False)
+    demog = pd.read_csv(get_file(FILES["demog"]), low_memory=False)
     demog['RID'] = pd.to_numeric(demog['RID'], errors='coerce').astype('Int64')
     demog = demog.dropna(subset=['RID'])
 
@@ -193,7 +205,7 @@ def load_apoe():
     We count how many '4' alleles appear.
     """
     print("\n--- (4) APOE ---")
-    apoe = pd.read_csv(DATA_DIR / FILES["apoe"], low_memory=False)
+    apoe = pd.read_csv(get_file(FILES["apoe"]), low_memory=False)
     apoe['RID'] = pd.to_numeric(apoe['RID'], errors='coerce').astype('Int64')
     apoe = apoe.dropna(subset=['RID', 'GENOTYPE'])
 
@@ -211,7 +223,7 @@ def load_mmse():
     MMSCORE: Mini-Mental State Exam score (0–30, higher = better).
     """
     print("\n--- (5) MMSE ---")
-    mmse = pd.read_csv(DATA_DIR / FILES["mmse"], low_memory=False)
+    mmse = pd.read_csv(get_file(FILES["mmse"]), low_memory=False)
     mmse['RID'] = pd.to_numeric(mmse['RID'], errors='coerce').astype('Int64')
     mmse = mmse.dropna(subset=['RID'])
 
