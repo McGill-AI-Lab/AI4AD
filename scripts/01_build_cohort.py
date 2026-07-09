@@ -124,6 +124,16 @@ def process_proteomics():
         values="NPQ",          # Normalized Protein Quantity becomes the cell values
         aggfunc="first"        # If there are duplicates, take the first one
     ).reset_index()
+
+    # Keep one baseline exam date per RID
+    exam_dates = (
+        prot_bl[["RID", "EXAMDATE"]]
+        .drop_duplicates(subset="RID")
+    )
+
+    prot_wide = prot_wide.merge(exam_dates, on="RID", how="left")
+
+    prot_wide['EXAMDATE'] = pd.to_datetime(prot_wide['EXAMDATE'])
     
     # Clean up the column names after pivoting
     prot_wide.columns.name = None
@@ -189,12 +199,14 @@ def load_demographics():
     """
     print("\n--- (3) DEMOGRAPHICS ---")
     demog = pd.read_csv(get_file(FILES["demog"]), low_memory=False)
+    demog['PTDOBYY'] = pd.to_datetime(demog['PTDOBYY'])
     demog['RID'] = pd.to_numeric(demog['RID'], errors='coerce').astype('Int64')
     demog = demog.dropna(subset=['RID'])
 
     # Keep only the columns we need; take first record per patient
-    demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT"]].first()
+    demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT", "PTDOBYY"]].first()
     print(f"  Demographics for {len(demog):,} patients")
+
     return demog
 
 
@@ -255,6 +267,12 @@ def main():
     final_df = final_df.merge(demog, on="RID", how="left")
     final_df = final_df.merge(apoe, on="RID", how="left")
     final_df = final_df.merge(mmse, on="RID", how="left")
+
+    # Compute age of patient
+    final_df['AGE'] = (final_df['EXAMDATE'] - final_df['PTDOBYY']).dt.days // 365
+
+    # Drop extra columns before saving
+    final_df.drop(columns=['EXAMDATE', 'PTDOBYY'])
 
     # Save to disk
     out_path = OUT_DIR / "adni_nulisa_cohort.csv"
