@@ -46,8 +46,6 @@ import pandas as pd
 from pathlib import Path
 import glob
 
-# --- CONFIGURATION ---
-# Set up relative paths so this script works on anyone's machine who clones the repo
 DATA_DIR = Path("data/raw")
 OUT_DIR = Path("data/processed")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -60,11 +58,8 @@ FILES = {
     "mmse": "MMSE",
 }
 
-# Hyperparameter: We drop proteins that are mostly undetected to reduce noise
-DETECT_THRESHOLD = 0.50 
-
-# 'bl' is ADNI's standard baseline visit. 'sc' (screening) is sometimes used in ADNI2/GO
-BASELINE_VISCODES = {"bl", "sc"}
+DETECT_THRESHOLD = 0.50  # drop proteins detected in < 50% of samples
+BASELINE_VISCODES = {"bl", "sc"}  # 'sc' (screening) used in ADNI2/GO
 
 def get_file(filename):
     '''
@@ -85,60 +80,40 @@ def process_proteomics():
     """
     print("\n--- (1) PROTEOMICS: Filtering & Pivoting ---")
     prot = pd.read_csv(get_file(FILES["prot"]), low_memory=False)
-    
-    # 1. BIOLOGICAL FILTER: We only want blood plasma. 
-    # The 'SampleType' column contains QC flags; 'SampleMatrixType' contains the actual fluid type.
+
+    # Filter to plasma only (file also contains CSF rows)
     prot_plasma = prot[prot["SampleMatrixType"].astype(str).str.lower().str.contains("plasma")].copy()
     print(f"  Plasma rows: {len(prot_plasma):,}")
 
-    # 2. TEMPORAL FILTER: Keep only the baseline visit to avoid data leakage 
-    # (we want to predict disease state *at* baseline, not use future data).
+    # Keep baseline visits only
     prot_bl = prot_plasma[prot_plasma["VISCODE"].astype(str).str.lower().isin(BASELINE_VISCODES)].copy()
     print(f"  Baseline rows: {len(prot_bl):,}")
 
-    # 3. QUALITY CONTROL FILTER: Handle assay detectability limits.
+    # Drop proteins below detectability threshold
     if "TargetDetectability" in prot_bl.columns:
         before = len(prot_bl)
-        
-        # Strip the '%' sign, convert to float, and scale to 0.0 - 1.0
         td_clean = prot_bl["TargetDetectability"].astype(str).str.replace("%", "", regex=False)
         td_numeric = pd.to_numeric(td_clean, errors="coerce") / 100.0
-        
-        # Filter for proteins detected in >= 50% of samples
         prot_bl = prot_bl[td_numeric >= DETECT_THRESHOLD].copy()
-            
         print(f"  After detectability filter: {before:,} -> {len(prot_bl):,} rows")
-        
-        # We are temporarily turning the filter OFF so the rest of the script can run
-        # prot_bl = prot_bl[ ... ]
 
-
-    # 4. IDENTIFY FEATURE NAMES: Find which column holds the protein name
+    # Find which column holds the protein name
     protein_col = next((c for c in ["ProteinName", "Target", "UniProtID"] if c in prot_bl.columns), None)
-    
-    # 5. RESHAPE DATA: Pivot from "Long" (many rows per patient) to "Wide" (one row per patient, many columns)
-    # This creates our feature matrix `X` for Scikit-Learn.
+
+    # Pivot from long (many rows per patient) to wide (one row per patient, one col per protein)
     prot_wide = prot_bl.pivot_table(
-        index="RID",           # Patient ID becomes the row index
-        columns=protein_col,   # Protein names become the column headers
-        values="NPQ",          # Normalized Protein Quantity becomes the cell values
-        aggfunc="first"        # If there are duplicates, take the first one
+        index="RID",
+        columns=protein_col,
+        values="NPQ",
+        aggfunc="first"
     ).reset_index()
 
-    # Keep one baseline exam date per RID
-    exam_dates = (
-        prot_bl[["RID", "EXAMDATE"]]
-        .drop_duplicates(subset="RID")
-    )
-
+    # Carry baseline exam date through for age calculation
+    exam_dates = prot_bl[["RID", "EXAMDATE"]].drop_duplicates(subset="RID")
     prot_wide = prot_wide.merge(exam_dates, on="RID", how="left")
-
     prot_wide['EXAMDATE'] = pd.to_datetime(prot_wide['EXAMDATE'])
-    
-    # Clean up the column names after pivoting
+
     prot_wide.columns.name = None
-    
-    # 6. ID STANDARDIZATION: Force RID to be an Integer so it merges perfectly later
     prot_wide['RID'] = pd.to_numeric(prot_wide['RID'], errors='coerce').astype('Int64')
     prot_wide = prot_wide.dropna(subset=['RID'])
     
@@ -154,35 +129,25 @@ def build_baseline_cohort():
     print("\n--- (2) DIAGNOSIS: Extracting Baseline Labels ---")
     dx = pd.read_csv(get_file(FILES["dx"]), low_memory=False)
 
-    # 1. TEMPORAL FILTER: Get baseline diagnoses only
     dx_bl = dx[dx["VISCODE"].astype(str).str.lower().isin(BASELINE_VISCODES)].copy()
 
-    # 2. LABEL ENGINEERING: Convert ADNI's complex phase-specific codes into clean binary classes
     def get_label(row):
-        # First, try the harmonized DIAGNOSIS column (used in ADNI2/3/4)
+        # Try harmonized DIAGNOSIS column first (ADNI2/3/4)
         try:
             d = int(float(row.get("DIAGNOSIS", -1)))
             if d == 1: return "CN"
             if d == 2: return "MCI"
-            # Note: We exclude d == 3 (Alzheimer's Disease) as per our proposal scope
-        except: 
+        except:
             pass
-        
-        # Fallback for ADNI1 data where the DIAGNOSIS column might be empty
+        # Fallback for ADNI1 (uses flag columns instead)
         if row.get("DXMCI", 0) == 1: return "MCI"
         if row.get("DXNORM", 0) == 1: return "CN"
         return "exclude"
 
-    # Apply the logic to create our target variable 'y'
     dx_bl["cohort_group"] = dx_bl.apply(get_label, axis=1)
-    
-    # Drop anyone who isn't CN or MCI
-    cohort = dx_bl[dx_bl["cohort_group"] != "exclude"][["RID", "cohort_group"]].copy()
-    
-    # Ensure strict 1-to-1 mapping by keeping only the earliest baseline record per patient
+
+    cohort = dx_bl[dx_bl["cohort_group"] != "exclude"][["RID", "PHASE", "cohort_group"]].copy()
     cohort = cohort.drop_duplicates(subset="RID", keep="first")
-    
-    # ID STANDARDIZATION: Force RID to Integer
     cohort['RID'] = pd.to_numeric(cohort['RID'], errors='coerce').astype('Int64')
     cohort = cohort.dropna(subset=['RID'])
 
@@ -199,11 +164,9 @@ def load_demographics():
     """
     print("\n--- (3) DEMOGRAPHICS ---")
     demog = pd.read_csv(get_file(FILES["demog"]), low_memory=False)
-    demog['PTDOBYY'] = pd.to_datetime(demog['PTDOBYY'])
+    demog['PTDOBYY'] = pd.to_numeric(demog['PTDOBYY'], errors='coerce')
     demog['RID'] = pd.to_numeric(demog['RID'], errors='coerce').astype('Int64')
     demog = demog.dropna(subset=['RID'])
-
-    # Keep only the columns we need; take first record per patient
     demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT", "PTDOBYY"]].first()
     print(f"  Demographics for {len(demog):,} patients")
 
@@ -222,8 +185,6 @@ def load_apoe():
     apoe = apoe.dropna(subset=['RID', 'GENOTYPE'])
 
     apoe["apoe4_count"] = apoe["GENOTYPE"].astype(str).str.count("4")
-
-    # One row per patient 
     apoe = apoe.groupby("RID", as_index=False)["apoe4_count"].max()
     print(f"  APOE ε4 counts for {len(apoe):,} patients")
     return apoe
@@ -239,10 +200,7 @@ def load_mmse():
     mmse['RID'] = pd.to_numeric(mmse['RID'], errors='coerce').astype('Int64')
     mmse = mmse.dropna(subset=['RID'])
 
-    # Filter to baseline visits only
     mmse = mmse[mmse["VISCODE"].astype(str).str.strip().str.lower().isin(BASELINE_VISCODES)].copy()
-
-    # One row per patient
     mmse = mmse.groupby("RID", as_index=False)[["MMSCORE"]].first()
     print(f"  Baseline MMSE for {len(mmse):,} patients")
     return mmse
@@ -261,25 +219,18 @@ def main():
     mmse = load_mmse()
 
     print("\n--- (6) MERGE: Joining Everything by RID ---")
-    # Inner join proteins + diagnosis (must have both)
     final_df = pd.merge(cohort, prot_wide, on="RID", how="inner")
-    # Left join covariates (keep patient even if a covariate file is missing a row)
     final_df = final_df.merge(demog, on="RID", how="left")
     final_df = final_df.merge(apoe, on="RID", how="left")
     final_df = final_df.merge(mmse, on="RID", how="left")
 
-    # Compute age of patient
-    final_df['AGE'] = (final_df['EXAMDATE'] - final_df['PTDOBYY']).dt.days // 365
+    # Compute age at baseline exam, then drop intermediate columns
+    final_df['AGE'] = final_df['EXAMDATE'].dt.year - final_df['PTDOBYY']
+    final_df = final_df.drop(columns=['EXAMDATE', 'PTDOBYY'])
 
-    # Drop extra columns before saving
-    final_df.drop(columns=['EXAMDATE', 'PTDOBYY'])
-
-    # Save to disk
     out_path = OUT_DIR / "adni_nulisa_cohort.csv"
     final_df.to_csv(out_path, index=False)
 
-
-   # To see how many patients were dropped from merge
     print(f"\nSaved final cohort to {out_path}")
     print(f"  Final Shape: {final_df.shape} (Patients: {len(final_df)})")
     print(f"  Covariate coverage:")
