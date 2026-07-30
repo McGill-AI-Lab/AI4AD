@@ -164,11 +164,22 @@ def load_demographics():
     """
     print("\n--- (3) DEMOGRAPHICS ---")
     demog = pd.read_csv(get_file(FILES["demog"]), low_memory=False)
-    demog['PTDOBYY'] = pd.to_numeric(demog['PTDOBYY'], errors='coerce')
+
+    # Date of birth: PTDOB is 'MM/YYYY' (month precision); PTDOBYY is a full date
+    # STRING like '1931-01-01', not a year integer. Running to_numeric() on PTDOBYY
+    # coerces every value to NaN, which is what silently wiped out AGE. Parse both as
+    # dates and prefer PTDOB, since PTDOBYY's month/day are placeholders (always 01-01).
+    dob = pd.to_datetime(demog["PTDOB"], format="%m/%Y", errors="coerce")
+    dob_fallback = pd.to_datetime(demog["PTDOBYY"], errors="coerce")
+    demog["DOB"] = dob.fillna(dob_fallback)
+
     demog['RID'] = pd.to_numeric(demog['RID'], errors='coerce').astype('Int64')
     demog = demog.dropna(subset=['RID'])
-    demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT", "PTDOBYY"]].first()
-    print(f"  Demographics for {len(demog):,} patients")
+    # groupby.first() skips NaN per column, so a patient missing DOB on one visit
+    # still picks up the value from another.
+    demog = demog.groupby("RID", as_index=False)[["PTGENDER", "PTEDUCAT", "DOB"]].first()
+    print(f"  Demographics for {len(demog):,} patients "
+          f"({demog['DOB'].notna().sum():,} with usable DOB)")
 
     return demog
 
@@ -186,7 +197,8 @@ def load_apoe():
 
     apoe["apoe4_count"] = apoe["GENOTYPE"].astype(str).str.count("4")
     apoe = apoe.groupby("RID", as_index=False)["apoe4_count"].max()
-    print(f"  APOE ε4 counts for {len(apoe):,} patients")
+    # ASCII only: the Windows console codec (cp1252) cannot encode a literal epsilon.
+    print(f"  APOE e4 counts for {len(apoe):,} patients")
     return apoe
 
 
@@ -224,9 +236,10 @@ def main():
     final_df = final_df.merge(apoe, on="RID", how="left")
     final_df = final_df.merge(mmse, on="RID", how="left")
 
-    # Compute age at baseline exam, then drop intermediate columns
-    final_df['AGE'] = final_df['EXAMDATE'].dt.year - final_df['PTDOBYY']
-    final_df = final_df.drop(columns=['EXAMDATE', 'PTDOBYY'])
+    # Age at baseline exam, in years with month precision
+    final_df['AGE'] = (final_df['EXAMDATE'] - final_df['DOB']).dt.days / 365.25
+    final_df['AGE'] = final_df['AGE'].round(1)
+    final_df = final_df.drop(columns=['EXAMDATE', 'DOB'])
 
     out_path = OUT_DIR / "adni_nulisa_cohort.csv"
     final_df.to_csv(out_path, index=False)
@@ -234,7 +247,7 @@ def main():
     print(f"\nSaved final cohort to {out_path}")
     print(f"  Final Shape: {final_df.shape} (Patients: {len(final_df)})")
     print(f"  Covariate coverage:")
-    for col in ["PTGENDER", "PTEDUCAT", "apoe4_count", "MMSCORE"]:
+    for col in ["AGE", "PTGENDER", "PTEDUCAT", "apoe4_count", "MMSCORE"]:
         n = final_df[col].notna().sum()
         print(f"    {col}: {n}/{len(final_df)} ({100*n/len(final_df):.0f}%)")
     print("\nGroup Balance:")
