@@ -6,10 +6,11 @@ DATA_DIR = Path("data/raw")
 
 # The files we need to check
 files = [
-    "BSHRI_PLA_CSF_NULISA_CNS_16Feb2026.csv",
-    "DXSUM_16Feb2026.csv",
-    "PTDEMOG_16Feb2026.csv",
-    "MMSE_16Feb2026.csv"
+    "BSHRI_PLA_CSF_NULISA_CNS_20Jun2026.csv",
+    "DXSUM_20Jun2026.csv",
+    "PTDEMOG_20Jun2026.csv",
+    "APOERES_20Jun2026.csv",
+    "MMSE_20Jun2026.csv",
 ]
 
 print("--- SAFE COLUMN INSPECTION ---")

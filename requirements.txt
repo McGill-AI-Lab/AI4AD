@@ -19,3 +19,10 @@ six==1.17.0
 threadpoolctl==3.6.0
 tzdata==2025.3
 zipp==3.23.0
+
+# Phase 2 (EDA & preprocessing)
+statsmodels==0.14.4   # univariate tests, FDR correction
+# ComBat batch correction is NOT pinned here. `inmoose` needs a C toolchain and fails
+# to build a wheel on Windows without one, and its failure aborts the whole install.
+# It is only needed if the PHASE batch check exceeds the 10% variance threshold --
+# defer the choice of implementation until that check has actually run.
