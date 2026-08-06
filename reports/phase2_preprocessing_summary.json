@@ -1,0 +1,68 @@
+{
+  "cohort_shape": [
+    728,
+    124
+  ],
+  "n_proteins_input": 116,
+  "n_proteins_retained": 108,
+  "dropped_genotype_proxy": [
+    "Apolipoprotein E"
+  ],
+  "detection_floor": 5.0,
+  "n_values_masked_below_floor": 229,
+  "missing_threshold": 0.2,
+  "dropped_within_phase": [
+    "14-3-3 protein zeta/delta",
+    "Amyloid-beta precursor protein",
+    "Hemoglobin subunit alpha",
+    "Interleukin-1 beta",
+    "Pleiotrophin",
+    "Synaptosomal-associated protein 25",
+    "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein gamma"
+  ],
+  "dropped_pooled_would_be": [
+    "14-3-3 protein zeta/delta",
+    "Interleukin-1 beta",
+    "Pleiotrophin"
+  ],
+  "dropped_only_by_within_phase_rule": [
+    "Amyloid-beta precursor protein",
+    "Hemoglobin subunit alpha",
+    "Synaptosomal-associated protein 25",
+    "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein gamma"
+  ],
+  "n_cells_imputed": 75,
+  "log2_transform_applied": false,
+  "covariates": [
+    "AGE",
+    "PTEDUCAT",
+    "apoe4_count",
+    "MMSCORE",
+    "SEX_FEMALE"
+  ],
+  "scaling_applied": false,
+  "descriptive_scaling_stats": {
+    "AGE": {
+      "mean": 72.62252747252747,
+      "std": 7.117627335468463
+    },
+    "MMSCORE": {
+      "mean": 28.24175824175824,
+      "std": 1.7995155596007666
+    }
+  },
+  "pca": {
+    "evr_top5": [
+      0.17329990611987722,
+      0.12501073403960591,
+      0.034870428611062924,
+      0.03360591982922612,
+      0.027619657447405136
+    ],
+    "variance_explained_by_phase": 0.027905539150856303,
+    "variance_explained_by_diagnosis": 0.0037697992207187817,
+    "combat_threshold": 0.1,
+    "combat_triggered": false
+  },
+  "output_matrix": "data/processed/phase2_feature_matrix.csv"
+}
