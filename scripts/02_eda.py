@@ -5,15 +5,15 @@ Takes the locked Phase 1 cohort (data/processed/adni_nulisa_cohort.csv) and
 produces the modelling feature matrix, plus the numbers behind the Phase 2
 decisions writeup (reports/phase2_decisions.md).
 
-Pipeline (see reports/phase2_decisions.md for the reasoning behind each step):
+Pipeline (reasoning for each step is in reports/phase2_decisions.md):
 
-  1. Drop `Apolipoprotein E`      -- genotype proxy, duplicates apoe4_count   [D4]
-  2. Below-detection -> NaN       -- NPQ < 5 in a log2-space column is a floor [D3]
-  3. Missingness filter           -- WITHIN-PHASE >20%, not pooled            [D2]
-  4. Median imputation            -- global column median, post-filter
-  5. NO log2 transform            -- NPQ is already log2-normalised           [D1]
-  6. Covariate prep               -- sex 1/2 -> 0/1; age/MMSE scaling deferred [D5]
-  7. Batch check                  -- PCA, % protein variance explained by PHASE [D6]
+  1. Drop `Apolipoprotein E`                                  [D4]
+  2. Below-detection (NPQ < 5) -> NaN                         [D3]
+  3. Missingness filter, WITHIN-PHASE >20% not pooled         [D2]
+  4. Median imputation, global column median
+  5. NO log2 transform                                        [D1]
+  6. Covariate prep, sex 1/2 -> 0/1, scaling deferred         [D5]
+  7. Batch check, PCA variance explained by PHASE             [D6]
 
 Outputs
   data/processed/phase2_feature_matrix.csv  locked, UNSCALED modelling matrix
@@ -22,10 +22,6 @@ Outputs
   reports/phase2_preprocessing_summary.json machine-readable run summary
   plots/*.png                               working plots (report figures are
                                             Cedric's and Jessica's branches)
-
-Console output is ASCII-only on purpose: the Windows console codec (cp1252)
-cannot encode Greek letters or emoji, and that crash happens AFTER files are
-written, so it fails quietly.
 """
 
 import json
@@ -45,35 +41,17 @@ REPORT_DIR = Path("reports")
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Sanity-check value only: warns (does not fail) if the protein count shifts,
-# which would mean the upstream detectability filter changed.
+# Warn (not fail) if the cohort shape shifts, it would mean a different cohort.
 EXPECTED_N_PROTEINS = 116
 EXPECTED_SHAPE = (728, 124)
 
-# --- Preprocessing constants (the knobs the decisions writeup argues about) ---
+# Preprocessing constants (see the writeup before changing any of these) 
 
-# [D4] Bimodal because the assay only reliably detects ApoE in e4 carriers, so
-# the column is a noisy re-measurement of apoe4_count, which is already a
-# covariate. Keeping both means collinearity and split SHAP credit in Phase 4.
-DROP_PROTEINS = ["Apolipoprotein E"]
-
-# [D3] Protein values sit in log2 space centred near 12.5 (p1 = 6.5). A value of
-# 0.0 -- or anything below ~5 -- is the assay's detection floor, not a
-# measurement. Left in place it drags every median it touches downward.
-DETECTION_FLOOR = 5.0
-
-# [D2] Applied per PHASE, not pooled. A protein 80% missing in ADNIGO but
-# complete elsewhere averages ~10% overall and survives a global filter; median
-# imputation then writes one constant into 80% of ADNIGO rows, and ADNIGO is
-# 100% MCI. That is preprocessing-manufactured label leakage.
-MISSING_THRESHOLD = 0.20
-
-# Number of PCs exported for the figure work.
-N_PCS_EXPORT = 5
-
-# [D6] If PHASE explains more than this share of total protein variance, the
-# roles doc calls for ComBat.
-COMBAT_TRIGGER = 0.10
+DROP_PROTEINS = ["Apolipoprotein E"]  # [D4] genotype proxy, duplicates apoe4_count
+DETECTION_FLOOR = 5.0                 # [D3] below this is undetected, not measured
+MISSING_THRESHOLD = 0.20              # [D2] applied per PHASE, not pooled
+COMBAT_TRIGGER = 0.10                 # [D6] phase variance above this -> ComBat
+N_PCS_EXPORT = 5                      # PCs written out for the figure work
 
 ID_COLS = ["RID", "PHASE"]
 LABEL_COL = "cohort_group"
@@ -83,9 +61,8 @@ COVARIATE_COLS = ["AGE", "PTGENDER", "PTEDUCAT", "apoe4_count", "MMSCORE"]
 def variance_explained_by_group(scores, groups):
     """Fraction of a vector's variance lying between groups (one-way ANOVA R^2).
 
-    Used per principal component: R^2 near 1 means that component is essentially
-    a group indicator. Weighting each PC's R^2 by the variance that PC carries
-    gives the share of TOTAL protein variance attributable to the grouping.
+    Applied per PC and weighted by that PC's variance share, this gives the
+    share of total protein variance explained by the grouping.
     """
     scores = np.asarray(scores, dtype=float)
     grand_mean = scores.mean()
@@ -108,9 +85,8 @@ def main():
               "cohort than the Phase 2 brief was verified against -- compare "
               "before trusting anything downstream.")
 
-    # 01_build_cohort.py emits identifiers, the label, and 5 covariates alongside
-    # the protein NPQ columns. All of these must stay OUT of protein_cols, or they
-    # get treated as proteins by the filters and the PCA.
+    # These must stay OUT of protein_cols or the filters and PCA treat them as
+    # proteins.
     meta_cols = ID_COLS + [LABEL_COL] + COVARIATE_COLS
     missing_meta = [c for c in meta_cols if c not in df.columns]
     assert not missing_meta, (
@@ -158,8 +134,7 @@ def main():
     print("\n--- 3. DECISION 4: DROP GENOTYPE-PROXY PROTEINS ---")
     dropped_proxy = [c for c in DROP_PROTEINS if c in X.columns]
     if dropped_proxy:
-        # Report the genotype association we are dropping it on, so the number
-        # is in the run log and not only in the writeup.
+        # Log the genotype association the drop rests on.
         for col in dropped_proxy:
             if col == "Apolipoprotein E":
                 below = X[col] < DETECTION_FLOOR
@@ -175,15 +150,15 @@ def main():
     n_zeros = int((X == 0).to_numpy().sum())
     print(f"Values below NPQ {DETECTION_FLOOR}: {n_floor} (of which exact zeros: {n_zeros}) "
           f"across {int((below_floor.sum() > 0).sum())} proteins")
-    worst_floor = below_floor.sum().sort_values(ascending=False)
-    for name, count in worst_floor[worst_floor > 0].head(8).items():
-        print(f"    {name:<52} {int(count)}")
+    # Per-protein counts go to the JSON summary, not the console.
+    floor_counts = below_floor.sum()
+    floor_counts = {k: int(v) for k, v in floor_counts[floor_counts > 0]
+                    .sort_values(ascending=False).items()}
     X = X.mask(below_floor)
     print("Masked to NaN so they cannot drag the imputation medians down.")
 
     print("\n--- 5. DECISION 2: WITHIN-PHASE MISSINGNESS FILTER ---")
-    # Missingness per protein within each phase; a protein must clear the
-    # threshold in EVERY phase to survive.
+    # A protein must clear the threshold in EVERY phase to survive.
     per_phase_missing = X.isna().groupby(phase).mean()
     worst_phase_missing = per_phase_missing.max()
     pooled_missing = X.isna().mean()
@@ -193,21 +168,22 @@ def main():
     only_within = [c for c in drop_within if c not in drop_pooled]
 
     print(f"A pooled >20% filter would drop {len(drop_pooled)} proteins.")
-    print(f"The within-phase >20% filter drops  {len(drop_within)} proteins.")
-    print(f"Caught only by the within-phase rule ({len(only_within)}):")
-    for col in only_within:
-        rates = ", ".join(f"{p}: {per_phase_missing.loc[p, col] * 100:.1f}%"
-                          for p in per_phase_missing.index)
-        print(f"    {col:<52} pooled {pooled_missing[col] * 100:5.1f}%  |  {rates}")
+    print(f"The within-phase >20% filter drops  {len(drop_within)} proteins "
+          f"({len(only_within)} of them caught only by the within-phase rule).")
+    # Per-phase rates behind that difference -> JSON summary.
+    only_within_detail = {
+        col: {"pooled": round(float(pooled_missing[col]) * 100, 1),
+              **{p: round(float(per_phase_missing.loc[p, col]) * 100, 1)
+                 for p in per_phase_missing.index}}
+        for col in only_within
+    }
 
     X_filtered = X.drop(columns=drop_within)
     print(f"Proteins retained: {X_filtered.shape[1]}")
 
     print("\n--- 6. MEDIAN IMPUTATION ---")
-    # Global (not per-phase) medians on purpose: after the within-phase filter no
-    # surviving protein is more than 20% missing in any phase, and a per-phase
-    # median would write phase identity -- and therefore, via ADNIGO, diagnosis --
-    # into the imputed values.
+    # Global, not per-phase: a per-phase median would write phase -- and via
+    # ADNIGO, diagnosis -- into the imputed values.
     n_imputed = int(X_filtered.isna().to_numpy().sum())
     medians = X_filtered.median()
     X_imputed = X_filtered.fillna(medians)
@@ -222,14 +198,11 @@ def main():
     print(f"    min {np.min(desc):.2f} | p1 {np.percentile(desc, 1):.2f} | "
           f"median {np.median(desc):.2f} | p99 {np.percentile(desc, 99):.2f} | "
           f"max {np.max(desc):.2f}")
-    print("NULISA NPQ is defined as log2-normalised and the spread above confirms")
-    print("it. The roles doc's log2(x+1) is SKIPPED -- applying it would log twice")
-    print("and compress real between-sample variance toward zero.")
+    print("Already log2 (NULISA NPQ is defined that way), so log2(x+1) is SKIPPED.")
 
     print("\n--- 8. COVARIATE PREP ---")
     covars = df[COVARIATE_COLS].copy()
-    # ADNI codes PTGENDER as 1 = Male, 2 = Female. One-hot to a single 0/1
-    # indicator; the name says which direction it points so nobody has to guess.
+    # ADNI codes PTGENDER as 1 = Male, 2 = Female.
     assert set(covars["PTGENDER"].dropna().unique()) <= {1.0, 2.0}, (
         f"Unexpected PTGENDER codes: {sorted(covars['PTGENDER'].dropna().unique())}"
     )
@@ -246,10 +219,8 @@ def main():
         "Re-run 01_build_cohort.py and check the AGE parse."
     )
 
-    # [D5] Standardisation is NOT applied to the exported matrix. Fitting a
-    # scaler on all 728 rows before cross-validation leaks test-fold means and
-    # SDs into training. Modelling scales in-fold inside a Pipeline; the
-    # full-cohort statistics below are reported for description only.
+    # [D5] Not applied to the export -- Modelling scales in-fold. These stats are
+    # for tables and figures only.
     scaling_stats = {
         col: {"mean": float(covars[col].mean()), "std": float(covars[col].std(ddof=0))}
         for col in ["AGE", "MMSCORE"]
@@ -260,8 +231,7 @@ def main():
               "(full-cohort, descriptive only -- fit the scaler in-fold)")
 
     print("\n--- 9. DECISION 6: BATCH CHECK (PCA) ---")
-    # PCA on z-scored proteins: without scaling, PC1 just tracks whichever
-    # protein has the widest raw range.
+    # Z-score first, or PC1 just tracks whichever protein has the widest range.
     protein_means = X_imputed.mean()
     protein_sds = X_imputed.std(ddof=0).replace(0, 1.0)
     X_z = (X_imputed - protein_means) / protein_sds
@@ -282,23 +252,18 @@ def main():
 
     print(f"PC1 {evr[0] * 100:.1f}% | PC2 {evr[1] * 100:.1f}% | "
           f"PC3 {evr[2] * 100:.1f}% | first 5 cumulative {evr[:5].sum() * 100:.1f}%")
-    print("Per-PC share of that PC's variance explained by PHASE / by diagnosis:")
-    for k in range(N_PCS_EXPORT):
-        print(f"    PC{k + 1}  var {evr[k] * 100:5.1f}%   "
-              f"phase R2 {r2_phase[k] * 100:5.1f}%   dx R2 {r2_dx[k] * 100:5.1f}%")
-    print(f"\nTOTAL protein variance explained by PHASE:     {total_phase_var * 100:.2f}%")
+    # Per-PC numbers are written to reports/pca_variance.csv, not printed.
+    print(f"TOTAL protein variance explained by PHASE:     {total_phase_var * 100:.2f}%")
     print(f"TOTAL protein variance explained by DIAGNOSIS: {total_dx_var * 100:.2f}%")
     print(f"ComBat trigger threshold: {COMBAT_TRIGGER * 100:.0f}%")
     combat_triggered = total_phase_var > COMBAT_TRIGGER
     if combat_triggered:
-        print("  -> OVER THRESHOLD. ComBat is indicated. Note that phase and")
-        print("     diagnosis are confounded here (ADNIGO is 100% MCI), so save")
-        print("     BOTH corrected and uncorrected matrices -- Aim 4 measures the")
-        print("     exact effect ComBat removes.")
+        print("  -> OVER THRESHOLD. ComBat indicated. Save BOTH corrected and")
+        print("     uncorrected matrices -- Aim 4 measures what ComBat removes.")
     else:
         print("  -> UNDER THRESHOLD. No ComBat; keep the uncorrected matrix.")
 
-    # Export PCA products so figure work does not have to recompute anything.
+    # Exported so figure work does not recompute the PCA.
     pca_scores = pd.DataFrame(
         scores[:, :N_PCS_EXPORT],
         columns=[f"PC{k + 1}" for k in range(N_PCS_EXPORT)],
@@ -318,7 +283,7 @@ def main():
     pca_variance.to_csv(REPORT_DIR / "pca_variance.csv", index=False)
     print("Saved reports/pca_scores.csv and reports/pca_variance.csv")
 
-    # Working plot only -- the report figure is Cedric's.
+    # Working plots only -- the report figures are Cedric's.
     plt.figure(figsize=(8, 6))
     for group, color in [("ADNI1", "tab:blue"), ("ADNIGO", "tab:green"), ("ADNI3", "tab:orange")]:
         idx = phase_arr == group
@@ -368,10 +333,12 @@ def main():
         "dropped_genotype_proxy": dropped_proxy,
         "detection_floor": DETECTION_FLOOR,
         "n_values_masked_below_floor": n_floor,
+        "n_values_below_floor_by_protein": floor_counts,
         "missing_threshold": MISSING_THRESHOLD,
         "dropped_within_phase": drop_within,
         "dropped_pooled_would_be": drop_pooled,
         "dropped_only_by_within_phase_rule": only_within,
+        "missingness_pct_of_only_within_drops": only_within_detail,
         "n_cells_imputed": n_imputed,
         "log2_transform_applied": False,
         "covariates": list(covars.columns),
@@ -390,7 +357,7 @@ def main():
         json.dump(summary, f, indent=2)
     print("Saved reports/phase2_preprocessing_summary.json")
 
-    # ASCII only: the Windows console codec (cp1252) cannot encode emoji.
+
     print("\n[OK] Phase 2 preprocessing completed successfully.")
 
 

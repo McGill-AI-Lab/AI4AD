@@ -10,6 +10,18 @@
   ],
   "detection_floor": 5.0,
   "n_values_masked_below_floor": 229,
+  "n_values_below_floor_by_protein": {
+    "Hemoglobin subunit alpha": 122,
+    "Pleiotrophin": 33,
+    "Growth/differentiation factor 15": 32,
+    "Chitotriosidase-1": 30,
+    "Vascular endothelial growth factor receptor 2": 5,
+    "Membrane metalloendopeptidase": 3,
+    "Contactin-2": 1,
+    "Neuropeptide Y": 1,
+    "Periostin": 1,
+    "Serum amyloid A-1 protein": 1
+  },
   "missing_threshold": 0.2,
   "dropped_within_phase": [
     "14-3-3 protein zeta/delta",
@@ -31,6 +43,32 @@
     "Synaptosomal-associated protein 25",
     "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein gamma"
   ],
+  "missingness_pct_of_only_within_drops": {
+    "Amyloid-beta precursor protein": {
+      "pooled": 10.0,
+      "ADNI1": 0.0,
+      "ADNI3": 0.0,
+      "ADNIGO": 82.0
+    },
+    "Hemoglobin subunit alpha": {
+      "pooled": 16.8,
+      "ADNI1": 12.0,
+      "ADNI3": 22.1,
+      "ADNIGO": 12.4
+    },
+    "Synaptosomal-associated protein 25": {
+      "pooled": 9.9,
+      "ADNI1": 0.0,
+      "ADNI3": 0.0,
+      "ADNIGO": 80.9
+    },
+    "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein gamma": {
+      "pooled": 12.2,
+      "ADNI1": 0.0,
+      "ADNI3": 15.3,
+      "ADNIGO": 41.6
+    }
+  },
   "n_cells_imputed": 75,
   "log2_transform_applied": false,
   "covariates": [
