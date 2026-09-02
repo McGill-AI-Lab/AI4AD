@@ -1,7 +1,10 @@
 data/raw/
-data/raw/
+data/processed/
+
 __pycache__/
 *.pyc
 .DS_Store
-data/raw/
-data/processed/
+venv/
+
+reports/pca_scores_cedric_check.csv
+reports/pca_variance_cedric_check.csv
