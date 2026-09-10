@@ -1,0 +1,117 @@
+protein,pct_missing_overall,pct_unusable_overall,pct_missing_ADNI1,pct_unusable_ADNI1,pct_missing_ADNIGO,pct_unusable_ADNIGO,pct_missing_ADNI3,pct_unusable_ADNI3,worst_phase_unusable,over_D2_threshold,removed_by_D4_first,dropped_by_D2_filter
+14-3-3 protein zeta/delta,90.385,90.385,76.667,76.667,100.0,100.0,100.0,100.0,100.0,True,False,True
+Pleiotrophin,93.681,98.214,100.0,100.0,48.315,85.393,100.0,100.0,100.0,True,False,True
+Amyloid-beta precursor protein,10.027,10.027,0.0,0.0,82.022,82.022,0.0,0.0,82.022,True,False,True
+Synaptosomal-associated protein 25,9.89,9.89,0.0,0.0,80.899,80.899,0.0,0.0,80.899,True,False,True
+Interleukin-1 beta,25.0,25.0,1.333,1.333,58.427,58.427,37.168,37.168,58.427,True,False,True
+Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein gamma,12.225,12.225,0.0,0.0,41.573,41.573,15.339,15.339,41.573,True,False,True
+Apolipoprotein E,0.0,31.319,0.0,28.667,0.0,31.461,0.0,33.628,33.628,True,True,False
+Hemoglobin subunit alpha,0.0,16.758,0.0,12.0,0.0,12.36,0.0,22.124,22.124,True,False,True
+Chitotriosidase-1,0.0,4.121,0.0,5.0,0.0,6.742,0.0,2.655,6.742,False,False,False
+Growth/differentiation factor 15,0.0,4.396,0.0,3.333,0.0,1.124,0.0,6.195,6.195,False,False,False
+Vascular endothelial growth factor receptor 2,0.0,0.687,0.0,0.333,0.0,2.247,0.0,0.59,2.247,False,False,False
+Protein/nucleic acid deglycase DJ-1,0.137,0.137,0.0,0.0,1.124,1.124,0.0,0.0,1.124,False,False,False
+Membrane metalloendopeptidase,0.0,0.412,0.0,0.0,0.0,0.0,0.0,0.885,0.885,False,False,False
+Neuropeptide Y,0.0,0.137,0.0,0.333,0.0,0.0,0.0,0.0,0.333,False,False,False
+Periostin,0.0,0.137,0.0,0.333,0.0,0.0,0.0,0.0,0.333,False,False,False
+Contactin-2,0.0,0.137,0.0,0.0,0.0,0.0,0.0,0.295,0.295,False,False,False
+Serum amyloid A-1 protein,0.0,0.137,0.0,0.0,0.0,0.0,0.0,0.295,0.295,False,False,False
+Agrin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Alpha-synuclein,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Annexin A5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 26,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 22,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 17,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+CD40 ligand,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+CD63 antigen,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine ligand 4,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Chemokine-like protein TAFA-5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Calretinin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Chitinase-3-like protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Corticoliberin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Cystatin-C,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Eotaxin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-X-C motif chemokine 10,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-reactive protein,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Fibroblast growth factor 2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+"Fatty acid-binding protein, heart",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Ficolin-2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Folate receptor alpha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Glial cell line-derived neurotrophic factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Glial fibrillary acidic protein,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Angiopoietin-1 receptor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Beta-nerve growth factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Beta-secretase 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Brain abundant membrane attached signal protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Brain-derived neurotrophic factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+C-C motif chemokine 13,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Aromatic-L-amino-acid decarboxylase,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Arylsulfatase A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+"Aspartate aminotransferase, cytoplasmic",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Acetylcholinesterase,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin 33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interferon gamma,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Intercellular adhesion molecule 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Insulin-like growth factor-binding protein 7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Insulin-like growth factor 1 receptor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Huntingtin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Granulocyte-macrophage colony-stimulating factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Growth-regulated alpha protein,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Gamma-enolase,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Fractalkine,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-4,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-15,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-10,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-12 subunit beta|Interleukin-12 subunit alpha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-13,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Kallikrein-6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+"Interleukin-8, IL8",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+"Malate dehydrogenase, cytoplasmic",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Microtubule-associated protein tau,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neurofilament heavy polypeptide,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Mesothelin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Metalloproteinase inhibitor 3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neurogranin,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neurofilament light polypeptide,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-6 receptor subunit alpha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-17A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-18,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Interleukin-2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Phosphoglycerate kinase 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Peroxiredoxin-6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+PDZ and LIM domain 5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neuronal pentraxin-2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neuronal pentraxin receptor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Neuronal pentraxin-1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Platelet-derived growth factor receptor beta,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Placenta growth factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Pulmonary surfactant-associated protein D,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+RE1 silencing transcription factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Rab GDP dissociation inhibitor alpha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+RuvB like AAA ATPase 2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Polyubiquitin-B,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Presenilin 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Pro-interleukin-16,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Protein S100-A12,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Sequestosome-1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Secreted frizzled-related protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+SPARC-related modular calcium-binding protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+S100 calcium binding protein B,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+TAR DNA-binding protein 43,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Triggering receptor expressed on myeloid cells 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Slit homolog 2 protein,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Superoxide dismutase [Cu-Zn],0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Tumor necrosis factor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Triggering receptor expressed on myeloid cells 2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Vascular cell adhesion protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+VGF nerve growth factor inducible,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Vascular endothelial growth factor A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Vascular endothelial growth factor D,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Vascular endothelial growth factor receptor 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
+Visinin-like protein 1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False
